@@ -6,7 +6,10 @@
 #include <time.h>
 #include <limits.h>
 #include <sys/stat.h>
-
+#include <sys/types.h>
+#include <pwd.h>
+#include <grp.h>
+#include <dirent.h>
 
 int main(int argc, char * argv[])
 {
@@ -30,27 +33,44 @@ int main(int argc, char * argv[])
     return 0;
 }
 
-int dir_iterate(struct DIR * dir_ant)
+int dir_iterate(char dirname[], int distance)
 {
-    print_file_details("file_path");
-    if()
+    DIR *dir_ptr;
+    struct dirent *direntp;
+    if((dir_ptr = opendir( dirname )) == NULL)
+    {
+        fprintf(stderr,"ls1: cannot open $s\n",dirname);
+    }
+    else{
+        print_file_details("file_path");
+
+    }
+   
+  
   
  
 
     return 0;
 }
 
-int print_file_details(FILE * cur_file)
+int print_file_details(char * filename, struct stat *info_p,int space_count)
 {
-    
-  
- 
+    for (size_t i = 0; i < space_count; i++)
+    {
+        printf("    ");
+    }
+    printf("|___ [");
+    mode_to_letters(info_p->st_mode);
+    print_user_name_by_uid(info_p->st_uid);
+    print_group_by_gid(info_p->st_gid);
+    printf("%81d]  ",(long)info_p->st_size);
+    printf("%s\n",filename);
     return 0;
 }
 void mode_to_letters(int mode)
 {
     char *str;
-    strcpy(str,"__________");
+    strcpy(str,"__________ ");
     if(S_ISDIR(mode)){
         str[0] = 'd';
     }
@@ -92,5 +112,20 @@ void mode_to_letters(int mode)
     }
 
     printf(str);
+    return 0;
+}
+int print_user_name_by_uid(uid_t uid)
+{
+    char * temp_name = getpwuid(uid)->pw_name;
+    printf("%s   ",temp_name);
+  
+    return 0;
+}
+
+int print_group_by_gid(gid_t gid)
+{
+    char * temp_group= getgrgid(gid)->gr_name;
+    printf("%s          ",temp_group);
+  
     return 0;
 }
