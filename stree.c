@@ -10,6 +10,10 @@
 #include <pwd.h>
 #include <grp.h>
 #include <dirent.h>
+#include <sys/stat.h>
+ 
+size_t dir_count =0;
+size_t files_count =0;
 
 int main(int argc, char * argv[])
 {
@@ -45,12 +49,20 @@ int dir_iterate(char dirname[], int distance)
         print_file_details("file_path");
 
     }
-   
-  
-  
- 
 
     return 0;
+}
+
+void dostat(char *filename)
+{
+    struct stat info;
+    if( (stat(filename,&info))== -1)
+    {
+        perror(filename);
+    }
+    else{
+        print_file_details(filename,&info,1);
+    }
 }
 
 int print_file_details(char * filename, struct stat *info_p,int space_count)
@@ -116,16 +128,28 @@ void mode_to_letters(int mode)
 }
 int print_user_name_by_uid(uid_t uid)
 {
-    char * temp_name = getpwuid(uid)->pw_name;
-    printf("%s   ",temp_name);
-  
+    struct passwd *getpwuid(), *pw_ptr;
+    if((pw_ptr = getpwuid(uid) ) == NULL)
+    {
+        printf("%d",uid);
+        return 1;
+    }
+    else{
+        printf("%s   ",pw_ptr->pw_name);
+    }
     return 0;
 }
 
 int print_group_by_gid(gid_t gid)
 {
-    char * temp_group= getgrgid(gid)->gr_name;
-    printf("%s          ",temp_group);
-  
+    struct group *getgrgid(), *grp_ptr;
+    if((grp_ptr = getgrgid(gid) ) == NULL)
+    {
+        printf("%d",gid);
+        return 1;
+    }
+    else{
+        printf("%s          ",grp_ptr->gr_name);
+    }
     return 0;
 }
