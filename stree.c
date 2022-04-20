@@ -15,52 +15,62 @@
 size_t dir_count =0;
 size_t files_count =0;
 int print_file_details(char * filename, struct stat *info_p,int space_count);
-int dir_iterate(char dirname[], int space_count);
+int dir_iterate(char *dirname, int space_count);
 void dostat(char *filename ,int space_count);
 void mode_to_letters(int mode);
 int print_user_name_by_uid(uid_t uid);
 int print_group_by_gid(gid_t gid);
 int main(int argc, char * argv[])
 {
-    
-     char* dir_name;
-     if(argc > 1)
-     {
-        dir_name = argv[1]; 
-     }
-     else{
-         dir_name = ".";
-     }
-       dir_iterate(dir_name,0);
-
-    printf("\n%zu directories, %zu files\n", dir_count - 1, files_count);
- 
- 
-
+    char dir_name[PATH_MAX];
+    if(argc > 1)
+    {
+        //dir_name = argv[1]; 
+    }
+    else
+    {
+        if(getcwd(dir_name,sizeof(dir_name))!=NULL)
+        {
+            int spaces = 0;
+            int ans = dir_iterate(dir_name,spaces);
+        }
+        else
+        {
+            return -1;
+        }
+    }
+    //printf("\n%zu directories, %zu files\n", dir_count - 1, files_count);
     return 0;
 }
 
-int dir_iterate(char* dirname, int space_count)
+int dir_iterate(char *dirname, int space_count)
 {
+    //NOTE - we should convert dirname to be the full path of this file.
     DIR *dir_ptr;
     struct dirent *direntp;
     struct stat *temp_stat;
-    dostat(dirname,space_count);
+    char DirName[PATH_MAX];
+    getcwd(DirName,sizeof(DirName));
+    //NOTE - we should check if the current file/directory is a hidden file/ the original directory of the execution.
+    if(strcmp(dirname , DirName)!=0 && strcmp(dirname , "..")!=0 && strcmp(dirname , ".")!=0 && strcmp(dirname , ".git")!=0)
+    {
+        dostat(dirname,space_count);
+    }
     if((dir_ptr = opendir( dirname )) == NULL)
     {
-        fprintf(stderr,"ls1: cannot open $s\n",dirname);
-        return -1;
+        return 0;
     }
     dir_count++;
 
-   while ((direntp= readdir(dir_ptr)) != NULL)
- {
-     if(direntp->d_type!=4)
-     {
-      files_count++;
-     }
-   dir_iterate(direntp->d_name,space_count+1);
- }
+    //NOTE - this while loop are iterate over hidden diles/directories such as - "." , ".." , ".git" etc.
+    while ((direntp= readdir(dir_ptr)) != NULL)
+    {
+        if(direntp->d_type!=4)
+        {
+            files_count++;
+        }
+        dir_iterate(direntp->d_name,space_count+1);
+    }
     return 0;
 }
 
@@ -71,7 +81,9 @@ void dostat(char *filename,int space_count)
     {
         perror(filename);
     }
-    else{
+    else
+    {
+        //printf("%s\n" , filename);
         print_file_details(filename,&info,1);
     }
 }
@@ -83,17 +95,18 @@ int print_file_details(char * filename, struct stat *info_p,int space_count)
         printf("    ");
     }
     printf("|___ [");
+    //printf("file name is :%s\n" , filename);
     mode_to_letters(info_p->st_mode);
     print_user_name_by_uid(info_p->st_uid);
     print_group_by_gid(info_p->st_gid);
-    printf("%81d]  ",(long)info_p->st_size);
+    printf("%ld]  ",(long)info_p->st_size);
     printf("%s\n",filename);
     return 0;
 }
 void mode_to_letters(int mode)
 {
     char *str;
-    strcpy(str,"__________ ");
+    strcpy(str,"---------- ");
     if(S_ISDIR(mode)){
         str[0] = 'd';
     }
@@ -134,8 +147,7 @@ void mode_to_letters(int mode)
         str[3] = 'x';
     }
 
-    printf(str);
-    return 0;
+    printf("%s",str);
 }
 int print_user_name_by_uid(uid_t uid)
 {
