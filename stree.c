@@ -14,46 +14,57 @@
  
 size_t dir_count =0;
 size_t files_count =0;
-
+int print_file_details(char * filename, struct stat *info_p,int space_count);
+int dir_iterate(char dirname[], int space_count);
+void dostat(char *filename ,int space_count);
+void mode_to_letters(int mode);
+int print_user_name_by_uid(uid_t uid);
+int print_group_by_gid(gid_t gid);
 int main(int argc, char * argv[])
 {
     
-     
-    struct DIR *dir;
-    struct dirent *dir_ant;
-    char cwd_dir [PATH_MAX];
+     char* dir_name;
+     if(argc > 1)
+     {
+        dir_name = argv[1]; 
+     }
+     else{
+         dir_name = ".";
+     }
+       dir_iterate(dir_name,0);
 
-    if(getcwd(cwd_dir,sizeof(cwd_dir))!=NULL)
-    {
-      dir = opendir(cwd_dir);
-      if(dir!=NULL)
-      {
-
-      }
-    }
-
+    printf("\n%zu directories, %zu files\n", dir_count - 1, files_count);
+ 
  
 
     return 0;
 }
 
-int dir_iterate(char dirname[], int distance)
+int dir_iterate(char* dirname, int space_count)
 {
     DIR *dir_ptr;
     struct dirent *direntp;
+    struct stat *temp_stat;
+    dostat(dirname,space_count);
     if((dir_ptr = opendir( dirname )) == NULL)
     {
         fprintf(stderr,"ls1: cannot open $s\n",dirname);
+        return -1;
     }
-    else{
-        print_file_details("file_path");
+    dir_count++;
 
-    }
-
+   while ((direntp= readdir(dir_ptr)) != NULL)
+ {
+     if(direntp->d_type!=4)
+     {
+      files_count++;
+     }
+   dir_iterate(direntp->d_name,space_count+1);
+ }
     return 0;
 }
 
-void dostat(char *filename)
+void dostat(char *filename,int space_count)
 {
     struct stat info;
     if( (stat(filename,&info))== -1)
