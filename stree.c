@@ -18,24 +18,41 @@
 void mode_to_letters(int mode);
 int print_user_name_by_uid(uid_t uid);
 int print_group_by_gid(gid_t gid);
-char* file_name(const char *pathname , char *ans);
+int check_is_hidden(const char *pathname );
 
 static int              /* Callback function called by ftw() */
 dirTree(const char *pathname, const struct stat *sbuf, int type, struct FTW *ftwb)
 {
-    char *ans;
-    char *filename = file_name(pathname , ans);
+    if(check_is_hidden(pathname)== 1)return 0;
+    if(strcmp(pathname,".")==0)
+    {
+        printf(".\n");
+        return 0;
+    }
+    char *filename;
+    int length = strlen(pathname);
+    int start = 0;
+    for(int i = length-1;i>=0;i--)
+    {
+        if(pathname[i] == '/')
+        {
+            start = i+1;
+            break;
+        }
+    }
+         filename = (pathname+start);
+    
     if(filename[0] == '.')return 0;
     if (type == FTW_NS) 
     {                  /* Could not stat() file */
         printf("?");
     }
-    for(int i=0;i<(3*ftwb->level) || i<3;i++)
+    for(int i=0;i<(4*(ftwb->level-1));i++)
     {
         printf(" ");
     }
-    printf("├─── [");
-    //mode_to_letters(sbuf->st_mode);
+    printf("├── [");
+    mode_to_letters(sbuf->st_mode);
     print_user_name_by_uid(sbuf->st_uid);
     print_group_by_gid(sbuf->st_gid);
     printf("%ld]  ",(long)sbuf->st_size);
@@ -67,8 +84,7 @@ int main(int argc, char *argv[])
 void mode_to_letters(int mode)
 {
 
-    char *str;
-    strcpy(str,"---------- ");
+    char str[11] = "---------- ";
     if(S_ISDIR(mode))
     {
         str[0] = 'd';
@@ -145,25 +161,19 @@ int print_group_by_gid(gid_t gid)
     }
     return 0;
 }
-char* file_name(const char *pathname , char *ans)
+int check_is_hidden(const char *pathname )
 {
     int length = strlen(pathname);
     int start = 0;
-    for(int i = length-1;i>=0;i--)
+    for(int i = 1;i<length-1;i++)
     {
-        if(pathname[i] == '/')
+
+        if((pathname[i] == '/') && pathname[i+1] == '.')
         {
-            start = i+1;
-            break;
+            return 1;
         }
     }
-    while(start<length)
-    {
-        *ans += pathname[start];
-        //printf("%c" , pathname[start]);
-        start++;
-    }
-    return ans;
+    return 0;   
 }
 
 
