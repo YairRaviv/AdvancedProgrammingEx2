@@ -49,7 +49,8 @@ dirTree(const char *pathname, const struct stat *sbuf, int type, struct FTW *ftw
     }
     for(int i=0;i<(4*(ftwb->level-1));i++)
     {
-        printf(" ");
+        if(i%4 == 0){printf("│");}
+        else {printf(" ");}
     }
     printf("├── [");
     mode_to_letters(sbuf->st_mode);
