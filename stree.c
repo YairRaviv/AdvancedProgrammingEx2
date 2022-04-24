@@ -19,6 +19,8 @@ void mode_to_letters(int mode);
 int print_user_name_by_uid(uid_t uid);
 int print_group_by_gid(gid_t gid);
 int check_is_hidden(const char *pathname );
+char *PATH;
+int ARGC = 0;
 
 static int              /* Callback function called by ftw() */
 dirTree(const char *pathname, const struct stat *sbuf, int type, struct FTW *ftwb)
@@ -27,6 +29,11 @@ dirTree(const char *pathname, const struct stat *sbuf, int type, struct FTW *ftw
     if(strcmp(pathname,".")==0)
     {
         printf(".\n");
+        return 0;
+    }
+    else if (ARGC > 1 && strcmp(pathname,PATH)==0)
+    {
+        printf("%s\n" , PATH);
         return 0;
     }
     char *filename;
@@ -63,7 +70,7 @@ dirTree(const char *pathname, const struct stat *sbuf, int type, struct FTW *ftw
 int main(int argc, char *argv[])
 {
     int flags = 0;
-    if (argc != 2) 
+    if (argc < 2) 
     {
         if (nftw(".", dirTree, 10, flags) == -1) 
         {
@@ -75,10 +82,24 @@ int main(int argc, char *argv[])
             exit(EXIT_SUCCESS);
         }
     }
-    if (nftw(argv[1], dirTree, 10, flags) == -1) 
+    else
     {
-        perror("nftw");
-        exit(EXIT_FAILURE);
+        ARGC = argc;
+        PATH = argv[1];
+        DIR* dir = opendir(argv[1]);
+        if(dir)
+        {
+            if (nftw(argv[1], dirTree, 10, flags) == -1) 
+            {
+                perror("nftw");
+                exit(EXIT_FAILURE);
+            }
+        }
+        else
+        {
+            printf("directory doesn't exist!\n");
+            exit(EXIT_FAILURE);
+        }
     }
     exit(EXIT_SUCCESS);
 }
