@@ -23,8 +23,10 @@ int print_user_name_by_uid(uid_t uid);
 int print_group_by_gid(gid_t gid);
 int check_is_hidden(const char *pathname );
 int print_name(const char* name,int type, int mode);
+int check_is_twice_hidden(const char *pathname);
 char *PATH;
 int ARGC = 0;
+int is_path_argument_hidden = 0;
 
 static int              /* Callback function called by ftw() */
 dirTree(const char *pathname, const struct stat *sbuf, int type, struct FTW *ftwb)
@@ -41,7 +43,15 @@ dirTree(const char *pathname, const struct stat *sbuf, int type, struct FTW *ftw
         printf("%s\n" , PATH);
         return 0;
     }
-    if(check_is_hidden(pathname)== 1 && ARGC > 1 && strcmp(pathname,PATH)!=0)return 0;
+    if(is_path_argument_hidden)
+    {
+        if(check_is_twice_hidden(pathname)== 1)return 0;
+    }
+    else
+    {
+        if(check_is_hidden(pathname)== 1)return 0;
+    }
+    //if(check_is_hidden(pathname)== 1 && ARGC > 1 && strcmp(pathname,PATH)!=0)return 0;
     char *filename;
     int length = strlen(pathname);
     int start = 0;
@@ -107,6 +117,7 @@ int main(int argc, char *argv[])
     {
         ARGC = argc;
         PATH = argv[1];
+        is_path_argument_hidden = check_is_hidden(PATH);
         DIR* dir = opendir(argv[1]);
         if(dir)
         {
@@ -233,6 +244,22 @@ int check_is_hidden(const char *pathname )
         if((pathname[i] == '/') && pathname[i+1] == '.')
         {
             return 1;
+        }
+    }
+    return 0;   
+}
+int check_is_twice_hidden(const char *pathname )
+{
+    int length = strlen(pathname);
+    int start = 0;
+    int counter = 0;
+    for(int i = 1;i<length-1;i++)
+    {
+
+        if((pathname[i] == '/') && pathname[i+1] == '.')
+        {
+            counter++;
+            if(counter>1) return 1;
         }
     }
     return 0;   
