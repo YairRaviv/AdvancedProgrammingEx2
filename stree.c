@@ -29,7 +29,6 @@ int ARGC = 0;
 static int              /* Callback function called by ftw() */
 dirTree(const char *pathname, const struct stat *sbuf, int type, struct FTW *ftwb)
 {
-    if(check_is_hidden(pathname)== 1)return 0;
     if(strcmp(pathname,".")==0)
     {
         printf("\033[0;34m");
@@ -42,6 +41,7 @@ dirTree(const char *pathname, const struct stat *sbuf, int type, struct FTW *ftw
         printf("%s\n" , PATH);
         return 0;
     }
+    if(check_is_hidden(pathname)== 1)return 0;
     char *filename;
     int length = strlen(pathname);
     int start = 0;
