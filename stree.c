@@ -41,7 +41,7 @@ dirTree(const char *pathname, const struct stat *sbuf, int type, struct FTW *ftw
         printf("%s\n" , PATH);
         return 0;
     }
-    if(check_is_hidden(pathname)== 1)return 0;
+    if(check_is_hidden(pathname)== 1 && ARGC > 1 && strcmp(pathname,PATH)!=0)return 0;
     char *filename;
     int length = strlen(pathname);
     int start = 0;
