@@ -22,7 +22,7 @@ void mode_to_letters(int mode);
 int print_user_name_by_uid(uid_t uid);
 int print_group_by_gid(gid_t gid);
 int check_is_hidden(const char *pathname );
-int print_name(const char* name,int type);
+int print_name(const char* name,int type, int mode);
 char *PATH;
 int ARGC = 0;
 
@@ -70,7 +70,7 @@ dirTree(const char *pathname, const struct stat *sbuf, int type, struct FTW *ftw
     print_user_name_by_uid(sbuf->st_uid);
     print_group_by_gid(sbuf->st_gid);
     printf("%15ld]  ",(long)sbuf->st_size);
-    print_name(filename,type);
+    print_name(filename,type,sbuf->st_mode);
     if (type == FTW_F)
         files_counter++;
     if (type == FTW_D && strcmp(".", filename) != 0)
@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
             exit(EXIT_SUCCESS);
         }
     }
-    else
+    else if ( argc ==2)
     {
         ARGC = argc;
         PATH = argv[1];
@@ -112,8 +112,21 @@ int main(int argc, char *argv[])
         {
             if (nftw(argv[1], dirTree, 10, flags) == -1) 
             {
+
                 perror("nftw");
                 exit(EXIT_FAILURE);
+            }
+            else{
+                                 if (dirs_counter == 1)
+                dirs = "directory";
+            else
+                dirs = "directories";
+            if (files_counter == 1)
+                files = "file";
+            else
+                files = "files";
+            printf("\n%d %s, %d %s\n", dirs_counter, dirs, files_counter, files);
+            exit(EXIT_SUCCESS);
             }
         }
         else
@@ -121,6 +134,10 @@ int main(int argc, char *argv[])
             printf("directory doesn't exist!\n");
             exit(EXIT_FAILURE);
         }
+    }
+    else{
+        printf("too many arguments for this function\n");
+        return -1;
     }
     exit(EXIT_SUCCESS);
 }
@@ -220,7 +237,7 @@ int check_is_hidden(const char *pathname )
     }
     return 0;   
 }
-int print_name(const char* name,int type)
+int print_name(const char* name,int type, int mode)
 {
          if (type == FTW_D)
             {printf("\e[1;94m");
@@ -229,7 +246,7 @@ int print_name(const char* name,int type)
            {
                if(strstr(name, ".zip"))
                {printf("\e[1;91m");}
-               else if(!strstr(name, ".") && !strstr(name, "Makefile"))
+               else if((mode & S_IXUSR) || (mode & S_IXGRP) || (mode & S_IXOTH))
                {printf("\e[1;92m");}
              }
              printf("%s\n" , name);
